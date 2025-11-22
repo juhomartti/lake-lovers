@@ -148,7 +148,7 @@ if __name__ == "__main__":
         exit()
 
     # KÄYTTÄJÄN SYÖTE: Pielavesi/Lahdenpohja
-    ENNUSTE_PVM = "1.6.2026"
+    ENNUSTE_PVM = "22.7.2026"
     ENNAKOITU_SIJAINTI = {
         'nimi': "Pielavesi/Lahdenpohja",
         'lat': 63.243, 
