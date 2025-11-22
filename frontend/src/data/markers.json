@@ -1,0 +1,76 @@
+[
+  {
+    "nimi": "Uusimaa",
+    "havainnot": [
+      {
+        "koordinaatit": [60.1699, 24.9384],
+        "info": "Sinilevä havainto Espoon Pitkäjärvessä. Vesi vihreää ja sameaa."
+      },
+      {
+        "koordinaatit": [60.2055, 25.0975],
+        "info": "Leväkukinta Vantaan Kuusijärvessä. Haju haittaa ranta-alueilla."
+      },
+      {
+        "koordinaatit": [60.4524, 26.9348],
+        "info": "Pieni leväesiintymä Porvoon järvessä. Paikalliset kyltit varoittavat uimisesta."
+      }
+    ]
+  },
+  {
+    "nimi": "Pirkanmaa",
+    "havainnot": [
+      {
+        "koordinaatit": [61.4981, 23.7608],
+        "info": "Laaja leväpeite Tampereen Näsijärvessä. Viranomaiset seuraavat tilannetta."
+      },
+      {
+        "koordinaatit": [61.5000, 23.8000],
+        "info": "Leväkukinta Pyhäjärvessä. Uimakielto voimassa."
+      }
+    ]
+  },
+  {
+    "nimi": "Pohjois-Pohjanmaa",
+    "havainnot": [
+      {
+        "koordinaatit": [65.0123, 25.4697],
+        "info": "Leväesiintymä Oulun Kempeleessä. Paikalliset kalastajat raportoineet kalakuolemista."
+      },
+      {
+        "koordinaatit": [64.8675, 26.4500],
+        "info": "Sinilevä havainto Liminganlahdella. Veden laatu heikentynyt."
+      }
+    ]
+  },
+  {
+    "nimi": "Lappi",
+    "havainnot": [
+      {
+        "koordinaatit": [67.7500, 26.5000],
+        "info": "Harvinainen levähavainto Rovaniemen Ounasjärvessä. Tutkimukset käynnissä."
+      },
+      {
+        "koordinaatit": [69.0581, 27.9944],
+        "info": "Pieni leväesiintymä Inarinjärvessä. Ei vaaraa uimiselle."
+      }
+    ]
+  },
+  {
+    "nimi": "Keski-Suomi",
+    "havainnot": [
+      {
+        "koordinaatit": [62.2415, 25.7661],
+        "info": "Leväkukinta Jyväskylän Päijänteellä. Uimarannat suljettu."
+      }
+    ]
+  },
+  {
+    "nimi": "Etelä-Karjala",
+    "havainnot": [
+      {
+        "koordinaatit": [61.0583, 28.1891],
+        "info": "Sinilevä havainto Saimaalla. Viranomaiset suosittelevat veden välttämistä."
+      }
+    ]
+  }
+]
