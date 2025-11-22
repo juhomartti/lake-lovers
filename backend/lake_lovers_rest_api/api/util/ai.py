@@ -36,13 +36,15 @@ def ai_summary(data):
     Analysoi alla oleva sinilevähavaintoja koskeva data ja laadi siitä tiivis, viikoittaista 
     sinilevätiedotetta vastaava yhteenveto. Muodosta tiedote seuraavien ohjeiden mukaisesti:
 
-    1. Yleistilanne: Aloita kuvaamalla lyhyesti, kuinka monessa havainnossa havaittiin levää yleisesti (LevätilanneTxt != "Ei levää") ja kuinka monessa havaittiin runsas/erittäin runsas esiintymä.
+
+
+    1. Yleistilanne: Aloita kuvaamalla lyhyesti, minkälainen tilanne on sinilevän kanssa. Katso "lat" ja "lon"  yleisesti (LevätilanneTxt != "Ei levää") ja kuinka monessa havaittiin runsas/erittäin runsas esiintymä.
     2. Alueellinen katsaus: Nimeä ja kuvaile lyhyesti ne ELY-keskusten alueet (2-3 keskeisintä), joissa havaittiin eniten runsaita tai erittäin runsaita leväesiintymiä. Anna alueellinen yhteenveto, älä luettele yksittäisiä paikkoja.
     3. Loppuhuomio: Sisällytä lyhyt yhteenveto.
     4. Ohjeistus: Päätä tiedote lyhyeen ja ytimekkääseen ohjeistukseen toimenpiteistä sinilevän havaitsemisen varalle.
 
     DATA ALKAA TÄSTÄ:
-    {data}
+    {response}
     DATA PÄÄTTYY TÄHÄN.
     """
 
