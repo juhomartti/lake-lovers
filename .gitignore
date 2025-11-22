@@ -2,7 +2,7 @@
 
 # Backend python
 backend/.venv/
-backend/__pycache__/
+**/__pycache__/
 
 
 # Node.js
