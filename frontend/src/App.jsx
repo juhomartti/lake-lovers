@@ -18,14 +18,19 @@ function App() {
   const [markersData, setMarkersData] = useState(null);
   const [postData, setPostData] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
 
   // Funktio GET-pyynnön tekemiseen
   const fetchAiSummary = async () => {
     try {
+      setLoadingAiSummary(true);
       const response = await axios.get(`http://127.0.0.1:8000/api/ai`);
       setAiSummary(response.data);
     } catch (error) {
       console.error("Virhe datan hakemisessa:", error);
+
+    } finally {
+      setLoadingAiSummary(false);
     }
   };
 
@@ -92,7 +97,7 @@ function App() {
           markersData={markersData}/>
         </div>
         <div className='flex-1 bg-gray-800 rounded-2xl max-w-[30%] ml-2'>
-          <AiSummary aiSummary={aiSummary} fetchAiSummary={fetchAiSummary}/>
+          <AiSummary aiSummary={aiSummary} fetchAiSummary={fetchAiSummary} loadingAiSummary={loadingAiSummary}/>
         </div>
       </div>
       <footer className='h-[50px] bg-gray-800 shrink-0 mt-2'>
