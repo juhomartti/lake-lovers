@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import geoJSONfinland from './data/fi.json';
@@ -12,6 +12,13 @@ function Map({ selectedDate, setSelectedDate, setProvince, markersData }) {
     const currentMarkersRef = useRef([]);
     const leafletZoomAddedRef = useRef(false);
     const clickedProvinceRef = useRef(null);
+    const [clickedProvince, setClickedProvince] = useState(null);
+
+    useEffect(() => {
+    if (clickedProvince) {
+            clickedProvinceRef.current = clickedProvince;
+        }
+    }, [clickedProvince]);
 
     const updateMapText = (text) => {
         const el = document.getElementById("map-text");
@@ -42,7 +49,18 @@ function Map({ selectedDate, setSelectedDate, setProvince, markersData }) {
                         Date: ${havainto.date}<br/>
                         Description: ${havainto.description}<br/>
                         Level: ${havainto.level}<br/>
-                        Upkeep: ${havainto.upkeep}
+                        Upkeep: ${havainto.upkeep}<br/>
+                        <button id="popup-button-${havainto.id}" style="
+                            background-color: #007bff;
+                            color: white;
+                            border: none;
+                            margin-top: 8px;
+                            padding: 8px 12px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        ">
+                            Read AI Prediction
+                        </button>
                     `);
                 currentMarkersRef.current.push(marker);
             });
@@ -223,10 +241,14 @@ function Map({ selectedDate, setSelectedDate, setProvince, markersData }) {
                                 animate: true,
                                 duration: 0.5
                             });
-                            hideMarkers();
                             const clickedProvince = feature.properties.name;
-                            clickedProvinceRef.current = clickedProvince;
+                            if (clickedProvinceRef.current === clickedProvince) return;
 
+                            hideMarkers();
+                            clickedProvinceRef.current = clickedProvince;
+                            setClickedProvince(clickedProvince);
+                            
+            
                             if (setProvince) {
                                 setProvince(clickedProvince);
                                 console.log("Valittu province:", clickedProvince);
