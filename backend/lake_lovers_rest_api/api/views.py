@@ -6,6 +6,8 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import os
+import json
+from .util.ai import ai_summary
 
 class DataView(APIView):
     def get(self, request):
@@ -35,15 +37,22 @@ class ProvinceView(APIView):
                 15 : "Uudenmaan elinkeino-, liikenne- ja ympäristökeskus",
             }
 
-            items = ProvinceRequest.objects.raw(
+            items = Data.objects.raw(
                 f"""
                 SELECT * FROM api_data WHERE operator IS "{provinces[serializer.validated_data['province']]}"
                 AND date IS "{serializer.validated_data['date'].strftime('%Y-%m-%d')}"
                 """
             )
             serializer_data = DataSerializer(items, many=True)
+
+            ai_response = ai_summary(serializer_data)
+
+            response = {
+                "data": serializer_data.data,
+                "ai_summary": ai_response 
+            }
             
-            return Response(serializer_data.data, status=201)
+            return Response(json.dumps(response), status=201)
         return Response(serializer_data.error, status=400)    
 
 class AiView(APIView):
