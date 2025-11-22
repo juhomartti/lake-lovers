@@ -1,12 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Data
-from .serializers import DataSerializer
+from .models import Data, ProvinceRequest
+from .serializers import DataSerializer, ProvinceRequestSerializer
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import os
-import json
 
 class DataView(APIView):
     def get(self, request):
@@ -14,6 +13,39 @@ class DataView(APIView):
         serializer = DataSerializer(items, many=True)
         return Response(serializer.data)
     
+class ProvinceView(APIView):
+    def post(self, request):
+        serializer = ProvinceRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            provinces = {
+                1 : "Lapin elinkeino-, liikenne- ja ympäristökeskus",
+                2 : "Pohjois-Pohjanmaan elinkeino-, liikenne- ja ympäristökeskus",
+                3 : "Kainuun elinkeino-, liikenne- ja ympäristökeskus",
+                4 : "Pohjanmaan elinkeino-, liikenne- ja ympäristökeskus",
+                5 : "Etelä-Pohjanmaan elinkeino-, liikenne- ja ympäristökeskus",
+                6 : "Keski-Suomen elinkeino-, liikenne- ja ympäristökeskus",
+                7 : "Pohjois-Savon elinkeino-, liikenne- ja ympäristökeskus",
+                8 : "Pohjois-Karjalan elinkeino-, liikenne- ja ympäristökeskus",
+                9 : "Satakunnan elinkeino-, liikenne- ja ympäristökeskus",
+                10 : "Pirkanmaan elinkeino-, liikenne- ja ympäristökeskus",
+                11 : "Hämeen elinkeino-, liikenne- ja ympäristökeskus",
+                12 : "Etelä-Savon elinkeino-, liikenne- ja ympäristökeskus",
+                13 : "Kaakkois-Suomen elinkeino-, liikenne- ja ympäristökeskus",
+                14 : "Varsinais-Suomen elinkeino-, liikenne- ja ympäristökeskus",
+                15 : "Uudenmaan elinkeino-, liikenne- ja ympäristökeskus",
+            }
+
+            items = ProvinceRequest.objects.raw(
+                f"""
+                SELECT * FROM api_data WHERE operator IS "{provinces[serializer.validated_data['province']]}"
+                AND date IS "{serializer.validated_data['date'].strftime('%Y-%m-%d')}"
+                """
+            )
+            serializer_data = DataSerializer(items, many=True)
+            
+            return Response(serializer_data.data, status=201)
+        return Response(serializer_data.error, status=400)    
+
 class AiView(APIView):
     def get(self, request):
         items = Data.objects.raw(
