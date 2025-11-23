@@ -1,11 +1,16 @@
-function AISummary({fetchAiSummary, setAiSummary, setLoadingAiSummary, loadingAiSummary, aiSummary}) {
+function AISummary({fetchAiSummary, setAiSummary, loadingAiSummary, aiSummary, aiDateSummary, loadingDateAiSummary, setLoadingAiSummary}) {
 
     return (
-        <div className="p-6">
-            <h2 className="text-black text-2xl">AI Summary</h2>
+        <div className="p-2">
+            <h2 className="text-black text-xl font-bold">AI Summary</h2>
             {loadingAiSummary || <button onClick={() => fetchAiSummary(setLoadingAiSummary, setAiSummary )} className="bg-green-200 p-1 rounded-md mt-1">Generate AI Summary</button>}
-            {!loadingAiSummary && <LoadingSpinner />}
+            {loadingAiSummary && <LoadingSpinner />}
              {aiSummary && <p className="text-black">{aiSummary}</p>}
+            
+             <div  className="text-black text-md mt-45 font-bold">AI Prediction for the observation:</div>
+             {loadingDateAiSummary && <LoadingSpinner />}
+             {aiDateSummary && <p className="text-black white-space: pre-wrap">{aiDateSummary}</p>}
+             
         </div>
     )
 }
@@ -17,47 +22,10 @@ export default AISummary;
 function LoadingSpinner() {
   return (
     <>
-      <style>
-        {`
-          .loader {
-            margin-top: 10px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: inline-block;
-            border-top: 4px solid #F;
-            border-right: 4px solid transparent;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
-            position: relative;
-          }
-
-          .loader::after {
-            content: '';
-            box-sizing: border-box;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left: 4px solid #FF3D00;
-            border-bottom: 4px solid transparent;
-            animation: rotation 0.5s linear infinite reverse;
-          }
-
-          @keyframes rotation {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-        `}
-      </style>
-      <span className="loader"></span>
-      <p className="text-black inline-flex text-center">Loading summary...</p>
+      <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+      <p className="text-black inline-flex text-center"></p>
     </>
   );
 }

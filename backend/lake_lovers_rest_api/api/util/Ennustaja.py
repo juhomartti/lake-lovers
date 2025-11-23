@@ -129,7 +129,6 @@ def ennusta_riski_koordinaatille(malli: XGBClassifier, df_alkuperäinen: pd.Data
 
 def predict_func(date, lat, lon, name):
     print("Ladataan malli ja historiallinen data...")
-    date = date.strftime('%d.%m.%Y')
     try:
         # Ladataan malli
         malli = joblib.load(MODEL_FILE)

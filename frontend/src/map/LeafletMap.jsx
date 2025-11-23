@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import geoJSONfinland from '../data/fi.json';
@@ -7,15 +7,67 @@ import "react-datepicker/dist/react-datepicker.css";
 
 
 
-function LeafletMap({ markersData, setProvince, province, selectedDate, setSelectedDate, observationDates }) {
+function LeafletMap({ markersData, setProvince, province, selectedDate, setSelectedDate, observationDates, setDateAiSummary }) {
     const leafletMapRef = useRef(null); // store a mutable value that does not cause a re-render 
-    const [infoText, setInfoText] = useState("Select Region")
+    const [infoText, setInfoText] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+
+
+    const formattedObservationDates = observationDates?.map((item) => new Date(item.date));
+
+// select latest date at the beginning and set infoText
+useEffect(() => {
+    if (observationDates && observationDates.length > 0) {
+        const latestDate = new Date(
+                Math.max(
+                    ...observationDates.map((item) => new Date(item.date).getTime())
+                )
+            );
+            setSelectedDate(latestDate);
+            setIsLoading(false);
+
+            const dateString = latestDate.toISOString().split("T")[0];
+            const selectedDateObservations = observationDates.filter(
+                (item) => item.date === dateString
+            );
+            console.log(selectedDateObservations, "selectedDateObservations");
+            const count = selectedDateObservations?.length;
+            setInfoText(`Finland: ${count} observations on ${dateString}`);
+        }
+    }, [observationDates, setSelectedDate]);
+
+
+
+    // update infoText when selectedDate or province changes
+    useEffect(() => {
+        if (selectedDate) {
+            const dateString = selectedDate.toISOString().split("T")[0];
+
+            const filteredMarkers = markersData?.filter(
+                (marker) => marker.date === dateString
+            ) || [];
+
+            if (province) {
+                const count = filteredMarkers.length;
+                setInfoText(`${province}: ${count} observations on ${dateString}`);
+            }
+            else {
+                const selectedDateObservation = observationDates.find(
+                    (item) => new Date(item.date).getTime() === selectedDate.getTime()
+                );
+                const count = selectedDateObservation?.count || 0;
+                const dateString = selectedDate.toISOString().split("T")[0];
+                
+                setInfoText(`Finland: ${count} observations on ${dateString}`);
+            }
+        }
+    }, [selectedDate, province, markersData]);
+
 
     // let zoomControl = null
 
-
+    // create leafletMap
     useEffect(() => {
-        // create leafletMap
         const leafletMap = L.map("leafletMap", {
             center: [65.0, 26.0],
             zoom: 5.4,
@@ -75,13 +127,30 @@ function LeafletMap({ markersData, setProvince, province, selectedDate, setSelec
                             });
                         },
                         mouseout: (e) => {
-                            e.target.setStyle({
+                            if (province !== feature.properties?.name) {
+                                e.target.setStyle({
                                 weight: 2,
                                 color: "#ffffff",
                                 opacity: 0.6
                             });
+                            }
+                            
                         },
                         click: (e) => {
+                            const clickedProvince = feature.properties?.name;
+                            
+                            // Toggle: jos sama alue klikataan uudestaan, poista valinta
+                            if (province === clickedProvince) {
+                                setProvince(null);
+                                // Zoomaa takaisin koko Suomeen
+                                leafletMap.setView([65.0, 26.0], 5.4, {
+                                animate: true,
+                                duration: 0.5
+                                
+                            });
+                        } else {
+                            // Valitse uusi alue
+                            setProvince(clickedProvince);
                             const bounds = e.target.getBounds();
                             leafletMap.fitBounds(bounds, {
                                 padding: [50, 50],
@@ -89,28 +158,32 @@ function LeafletMap({ markersData, setProvince, province, selectedDate, setSelec
                                 animate: true,
                                 duration: 0.5
                             });
-                            
-                             setTimeout(() => {
-                                
-                            }, 500);
-                            // fire zoomend manually
-                            //leafletMap.fire("zoomend"); 
-                            
-
-                            // update selected province
-                            setProvince(feature.properties?.name)
                         }
-                    });
-                    
-                }
+                    }
+                });
+                
             }
+        }
         }).addTo(leafletMap);
 
         // listen zoomend events
         leafletMap.on("zoomend", () => {
-        const currentZoom = leafletMap.getZoom();
+            const currentZoom = leafletMap.getZoom();
+            if (currentZoom === leafletMap.getMinZoom()) {
+                setProvince(null);
+                // hide markers
+                leafletMapRef.current.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    leafletMapRef.current.removeLayer(layer);
+                }
 
-    });
+                console.log("ZOOMEND")
+
+
+            });
+            }
+
+        });
 
         // remove leafletMap if element is removed
         return () => {
@@ -153,7 +226,8 @@ function LeafletMap({ markersData, setProvince, province, selectedDate, setSelec
                             padding: 8px 12px;
                             border-radius: 4px;
                             cursor: pointer;
-                        ">
+                            display: none;
+                            onclick='cons'>
                             Read AI Prediction
                         </button>
                     </div>
@@ -166,39 +240,41 @@ function LeafletMap({ markersData, setProvince, province, selectedDate, setSelec
                         10,
                         { animate: true }
                     );
+
+                    setDateAiSummary(JSON.stringify({
+                        date: markerData.date,
+                        lat: markerData.latitude.toString(),
+                        lon: markerData.longitude.toString(),
+                        name: markerData.location
+                    }));
                 });
             });
         }
 
-        // update info text
-
-
-        if (markersData?.length > 0 && selectedDate) {
-            setInfoText(`${province}: ${markersData.length} observations on ${selectedDate?.toISOString().split("T")[0]}`)
-        } else if (selectedDate) (
-            setInfoText(`${province}: 0 observations on ${selectedDate?.toISOString().split("T")[0]}`)
-        )
-
-
     }, [markersData]);
+
 
     return (
         <div className="w-full h-full relative">
-            <div id="infotext" className="absolute top-5 left-1/2 transform -translate-x-1/2 
+            <div id="infotext" className="absolute bottom-5 left-1/2 transform -translate-x-1/2 
              z-[1000] bg-white/80 px-3 py-1 rounded shadow">{infoText}</div>
             <div id="leafletMap" className="w-full h-full"></div>
-            <div className="absolute top-4 left-4 z-[1000]"><DatePicker
-                selected={selectedDate}
-                onChange={setSelectedDate}
-                highlightDates={observationDates}  
-                inline    // show calendar
-            /></div>
-             
+            <div className="absolute top-4 left-4 z-[1000]">
+                {isLoading ? (
+                    <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                ) : (
+                    <DatePicker
+                        selected={selectedDate}
+                        onChange={setSelectedDate}
+                        highlightDates={formattedObservationDates}
+                        inline
+                    />
+                )}
+            </div>
         </div>
-        
     )
-    
 }
-
 export default LeafletMap;
 

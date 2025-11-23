@@ -1,32 +1,27 @@
-import { useState, useEffect} from 'react'
+import { useState, useEffect, use} from 'react'
 import './App.css'
 import './map/MapContainer'
 import provinceIds from './data/province_id.json';
 import MapContainer from './map/MapContainer';
-import { fetchAiSummary, getMarkers } from './ApiService';
+import { fetchAiSummary, getMarkers, getAllObservationsDates, getAiSummaryByDay } from './ApiService';
 import AISummary from './AiSummary';
+
 
 function App() {
   const [selectedDate, setSelectedDate] = useState(null)
+  const [observationDates, setAllObservationDates] = useState([])
   const [province, setProvince] = useState(null)
   const [markersData, setMarkersData] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
+  const [aiDateSummary, setDateAiSummary] = useState(null);
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+  const [loadingDateAiSummary, setLoadingDateAiSummary] = useState(false);
   const [loadingMarkers, setLoadingMarkers] = useState(false);
-
-  const observationDates = [
-      new Date(2025, 10, 10),
-      new Date(2025, 10, 14)
-  ];
 
 
   // setup at the beginning
   useEffect(() => {
-    // select latest observation date based on get request result else
-    const today = new Date();
-    setSelectedDate(today)
-
-
+    getAllObservationsDates(setAllObservationDates)
   }, []);
 
 
@@ -50,12 +45,21 @@ function App() {
   }, [selectedDate, province]);
 
 
+  useEffect(() => {
+    if (aiDateSummary) {
+        console.log('AI DATE SUMMARY CHANGED:', aiDateSummary);
+        getAiSummaryByDay(setLoadingDateAiSummary, setDateAiSummary, aiDateSummary)
+    }
+
+  }, [aiDateSummary])
+  
 
   return (
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-blue-600 text-white p-4 min-h-20">
-          <div className="container mx-auto">
+          <div className="container mx-auto text-3xl font-bold">
+            LAKE LOVERS
           </div>
         </header>
 
@@ -64,12 +68,12 @@ function App() {
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Map container*/}
             <div className="flex-3 lg:w-2/1 max-w-[1000px] max-h-[700px] bg-green-100 p-6 rounded-lg aspect-square">
-              <MapContainer markersData={markersData} setProvince={setProvince} province={province} selectedDate={selectedDate} setSelectedDate={setSelectedDate} observationDates={observationDates}/>
+              <MapContainer setDateAiSummary={setDateAiSummary} markersData={markersData} setProvince={setProvince} province={province} selectedDate={selectedDate} setSelectedDate={setSelectedDate} observationDates={observationDates}/>
             </div>
 
             {/* Summary container */}
-            <div className="flex-1 bg-yellow-100 p-6 rounded-lg">
-              <AISummary fetchAiSummary={fetchAiSummary} setAiSummary={setAiSummary} setLoadingAiSummary={setLoadingAiSummary} loadingAiSummary={loadingAiSummary}/>
+            <div className="flex-1 bg-yellow-100 p-6 rounded-lg max-w-[400px]">
+              <AISummary fetchAiSummary={fetchAiSummary} setAiSummary={setAiSummary} setLoadingAiSummary={setLoadingAiSummary} loadingAiSummary={loadingAiSummary} aiSummary={aiSummary} aiDateSummary={aiDateSummary} loadingDateAiSummary={loadingDateAiSummary}/>
             </div>
           </div>
         </main>
