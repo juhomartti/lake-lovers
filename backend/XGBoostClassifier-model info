@@ -1,0 +1,13 @@
+PROBLEMS!
+The need to allocate resources in areas where there is a rising risk of algae.
+The companies using algae (for example harvesting for compost) need to know where the highest possibility for a great harvest is.
+As the global environment changes, the warming of lakes and the increase in rainfall accelerate the growth of algae differently in different areas due to the variation in their respective drainage basins.
+
+So the further development of machine learning algorithms such as our XGBoostClassifier-model can help predict the changes in the algae development.
+Now the algorithm is trained using the 5-year algae severity information from jarviwik and to further enhance the data, environment factors from Open-meteo free weather API are added.
+The model is then trained using XGBoostClassifier-model (Extreme Gradient Boosting) for multiclass modeling, using splits 60% train, 20% validation and 20% Test, receiving 77,5% accuracy for predictions.
+This model is used for predicting the severity of an algae blooming given coordinates selected from the map and a date.
+The model also predicts the next year's next 10 biggest algae blooming’s giving the date, coordinates and the possibility for the models prediction confidence.
+Why a machine learning algorithm such as treemodel based XGBoostClassifier and not a (se*y) deep neural network?
+Handles complex, non-linear relationships between environmental variables while ensuring the results remain scientifically transparent and verifiable.
+Feature selection and interpretation is a significant key feature.
