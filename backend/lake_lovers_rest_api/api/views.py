@@ -1,12 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Data, ProvinceRequest
-from .serializers import DataSerializer, ProvinceRequestSerializer
+from .models import Data
+from .serializers import DataSerializer, ProvinceRequestSerializer, PredictSerializer
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import os
-from .util.ai import ai_summary
+import requests
+from .util.Ennustaja import predict_func
 
 class DataView(APIView):
     def get(self, request):
@@ -49,12 +50,20 @@ class ProvinceView(APIView):
 
 class AiView(APIView):
     def get(self, request):
-        items = Data.objects.raw(
-            """
-            SELECT * FROM api_data WHERE date BETWEEN '2025-07-02' AND '2025-07-12';
-            """
-        )
-        serializer = DataSerializer(items, many=True)
+        
+        try:
+            response = requests.get("https://rajapinnat.ymparisto.fi/api/kansalaishavainnot/1.0/requests.json?service_code=algaebloom_service_code_201808151546171&extension=true")
+        except Exception as e:
+            print(e)
+            response = ""
+
+        ai_data = []
+
+        for item in response:
+            if (len(ai_data) > 100):
+                break
+            ai_data.append(item)
+
         
         load_dotenv()
 
@@ -69,23 +78,24 @@ class AiView(APIView):
         # NYT ON VIELÄ VIIKOITTAINEN
         system_prompt = (
             "Olet Suomen Ympäristökeskuksen (SYKE) asiantuntija. Tehtäväsi on laatia "
-            "viikoittainen sinilevätiedote 20 viimeisimmän päivän havaintojen perusteella. "
             "Tiedotteen tulee olla analyyttinen, yleistajuinen ja noudattaa Suomen vesistöjen "
-            "virallista tiedotustyyliä. Vastaa AINOASTAAN suomeksi. Vastaa yhtenäisenä, useamman "
-            "kappaleen raporttina, maksimissaan 400 sanaa."
+            "virallista tiedotustyyliä. Vastaa AINOASTAAN englanniksi. Vastaa yhtenäisenä, useamman "
+            "kappaleen raporttina, maksimissaan 100 sanaa."
         )
 
         user_prompt = f"""
         Analysoi alla oleva sinilevähavaintoja koskeva data ja laadi siitä tiivis, viikoittaista 
         sinilevätiedotetta vastaava yhteenveto. Muodosta tiedote seuraavien ohjeiden mukaisesti:
 
-        1. Yleistilanne: Aloita kuvaamalla lyhyesti, kuinka monessa havainnossa havaittiin levää yleisesti (LevätilanneTxt != "Ei levää") ja kuinka monessa havaittiin runsas/erittäin runsas esiintymä.
+
+
+        1. Yleistilanne: Aloita kuvaamalla lyhyesti, minkälainen tilanne on sinilevän kanssa. "lat" ja "lon" kohdat ovat kordinaatit. Teenäiden mukaan alue analyyzi kuinka missäkin ely-keskuksessa on havantoja.
         2. Alueellinen katsaus: Nimeä ja kuvaile lyhyesti ne ELY-keskusten alueet (2-3 keskeisintä), joissa havaittiin eniten runsaita tai erittäin runsaita leväesiintymiä. Anna alueellinen yhteenveto, älä luettele yksittäisiä paikkoja.
         3. Loppuhuomio: Sisällytä lyhyt yhteenveto.
         4. Ohjeistus: Päätä tiedote lyhyeen ja ytimekkääseen ohjeistukseen toimenpiteistä sinilevän havaitsemisen varalle.
 
         DATA ALKAA TÄSTÄ:
-        {serializer.data}
+        {ai_data}
         DATA PÄÄTTYY TÄHÄN.
         """
 
@@ -101,8 +111,18 @@ class AiView(APIView):
                 contents=user_prompt,
                 config=config,
             )
+
+            print(response.text)
             return Response(response.model_dump_json())
 
         except Exception as e:
             print(f"VIRHE Geminin kutsussa: {e}")
-            return Response("moi")
+            return Response(e)
+        
+class PredictView(APIView):
+    def post(self, request):
+        serializer = PredictSerializer(data=request.data)
+        if serializer.is_valid():
+            response = predict_func(serializer.validated_data["date"], serializer.validated_data["lat"], serializer.validated_data["lon"], serializer.validated_data["name"])
+            return Response(response, status=200)
+        return Response(serializer.error, status=400)
