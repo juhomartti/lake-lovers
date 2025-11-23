@@ -26,10 +26,9 @@ def ai_summary(data):
     # NYT ON VIELÄ VIIKOITTAINEN
     system_prompt = (
         "Olet Suomen Ympäristökeskuksen (SYKE) asiantuntija. Tehtäväsi on laatia "
-        "viikoittainen sinilevätiedote 20 viimeisimmän päivän havaintojen perusteella. "
         "Tiedotteen tulee olla analyyttinen, yleistajuinen ja noudattaa Suomen vesistöjen "
-        "virallista tiedotustyyliä. Vastaa AINOASTAAN suomeksi. Vastaa yhtenäisenä, useamman "
-        "kappaleen raporttina, maksimissaan 400 sanaa."
+        "virallista tiedotustyyliä. Vastaa AINOASTAAN englanniksi. Vastaa yhtenäisenä, useamman "
+        "kappaleen raporttina, maksimissaan 100 sanaa."
     )
 
     user_prompt = f"""
@@ -38,7 +37,7 @@ def ai_summary(data):
 
 
 
-    1. Yleistilanne: Aloita kuvaamalla lyhyesti, minkälainen tilanne on sinilevän kanssa. Katso "lat" ja "lon"  yleisesti (LevätilanneTxt != "Ei levää") ja kuinka monessa havaittiin runsas/erittäin runsas esiintymä.
+    1. Yleistilanne: Aloita kuvaamalla lyhyesti, minkälainen tilanne on sinilevän kanssa. "lat" ja "lon" kohdat ovat kordinaatit. Teenäiden mukaan alue analyyzi kuinka missäkin ely-keskuksessa on havantoja.
     2. Alueellinen katsaus: Nimeä ja kuvaile lyhyesti ne ELY-keskusten alueet (2-3 keskeisintä), joissa havaittiin eniten runsaita tai erittäin runsaita leväesiintymiä. Anna alueellinen yhteenveto, älä luettele yksittäisiä paikkoja.
     3. Loppuhuomio: Sisällytä lyhyt yhteenveto.
     4. Ohjeistus: Päätä tiedote lyhyeen ja ytimekkääseen ohjeistukseen toimenpiteistä sinilevän havaitsemisen varalle.

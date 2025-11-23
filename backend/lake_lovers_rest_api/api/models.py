@@ -21,3 +21,12 @@ class ProvinceRequest(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Predict(models.Model):
+    date = models.CharField(max_length=255)
+    lat = models.FloatField()
+    lon = models.FloatField()
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name

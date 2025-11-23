@@ -13,7 +13,7 @@ import seaborn as sns
 # ************************************************
 # ASETUKSET JA VAKIOT
 # ************************************************
-file_path = "C:\\Users\\35845\\Documents\\PYTHON\\Hackhaton\\" 
+file_path = "." 
 INPUT_FILE = os.path.join(file_path, 'rikastettu_sinileva_data.csv') 
 MODEL_FILE = os.path.join(file_path, 'levamalli_xgboost.joblib')
 

@@ -1,0 +1,34 @@
+{
+  "1": "Lappi",
+  "2": "Northern Ostrobothnia",
+  "3": "Kainuu",
+  "4": "Ostrobothnia / Central Ostrobothnia",
+  "5": "Southern Ostrobothnia",
+  "6": "Central Finland",
+  "7": "Northern Savonia",
+  "8": "North Karelia",
+  "9": "Satakunta",
+  "10": "Pirkanmaa",
+  "11": "Tavastia Proper / Päijät-Häme",
+  "12": "Southern Savonia",
+  "13": "South Karelia / Kymenlaakso",
+  "14": "Finland Proper",
+  "15": "Uusimaa",
+  "16": "Ahvenanmaa"
+}
+
+
+const yhdistelmät = [
+  {
+    uusiNimi: "Ostrobothnia",
+    alueet: ["Ostrobothnia", "Central Ostrobothnia"]
+  },
+  {
+    uusiNimi: "Häme", 
+    alueet: ["Päijät-Häme", "Tavastia Proper"]
+  },
+  {
+    uusiNimi: "Southeastern Finland", 
+    alueet: ["South Karelia", "Kymenlaakso"]
+  }
+];
