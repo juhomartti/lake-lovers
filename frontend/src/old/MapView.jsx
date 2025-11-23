@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import geoJSONfinland from './data/fi.json';
-import geoJSONbalticsea from './data/balticsea.json';
-import mergedGeoJSON from './data/map.json';
+import geoJSONfinland from '../data/fi.json';
+import geoJSONbalticsea from '../data/balticsea.json';
+import mergedGeoJSON from '../data/map.json';
 
-function Map({ selectedDate, setSelectedDate, setProvince, markersData }) {
+function MapView({ selectedDate, setSelectedDate, setProvince, markersData }) {
 
 
 
