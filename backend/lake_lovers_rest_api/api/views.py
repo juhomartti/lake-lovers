@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from .util.Ennustaja import predict_func
+from .util.Ennustaja2 import ai_predict_hotspots
 import json
 
 PROVINCES = {
@@ -65,7 +66,7 @@ class DataView(APIView):
                     break
             data.append(i)
 
-        return Response(data)
+        return Response(data, status=200)
     
 class ProvinceView(APIView):
     def post(self, request):
@@ -145,14 +146,18 @@ class AiView(APIView):
                 config=config,
             )
 
-            print(response.text)
-            return Response(response.model_dump_json())
+            return Response(response.text, status=200)
 
         except Exception as e:
             print(f"VIRHE Geminin kutsussa: {e}")
-            return Response(e)
+            return Response(e, status=400)
         
 class PredictView(APIView):
+    def get(self, request):
+        response = ai_predict_hotspots()
+        print(response)
+        return Response(response, status=200)
+
     def post(self, request):
         serializer = PredictSerializer(data=request.data)
         if serializer.is_valid():

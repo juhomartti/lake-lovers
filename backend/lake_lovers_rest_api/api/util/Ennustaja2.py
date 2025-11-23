@@ -4,14 +4,15 @@ import os
 import joblib 
 from xgboost import XGBClassifier
 from typing import Dict, Any, List
+import pathlib
 
 # ************************************************
 # ASETUKSET JA VAKIOT
 # ************************************************
 # HUOM! Muokkaa tämä polku vastaamaan omaa koneesi hakemistoa!
-file_path = "C:\\Users\\35845\\Documents\\PYTHON\\Hackhaton\\" 
-INPUT_FILE = os.path.join(file_path, 'rikastettu_sinileva_data.csv') 
-MODEL_FILE = os.path.join(file_path, 'levamalli_xgboost.joblib')
+file_path = pathlib.Path().resolve()
+INPUT_FILE = os.path.join(file_path, 'api/util/rikastettu_sinileva_data.csv') 
+MODEL_FILE = os.path.join(file_path, 'api/util/levamalli_xgboost.joblib')
 
 # Piirteiden järjestys (kriittinen ennustuksessa)
 FEATURE_ORDER = [
@@ -127,8 +128,7 @@ def etsi_top_n_riskialuetta_optimoidusti(malli: XGBClassifier, df_valmis: pd.Dat
 # 3. PÄÄOHJELMA SUORITUS
 # ************************************************
 
-if __name__ == "__main__":
-    
+def ai_predict_hotspots():
     print("Ladataan malli ja historiallinen data...")
     TARGET_YEAR = 2026 # Tuleva vuosi ennustukseen
     TOP_N = 10 # Kuinka monta korkeimman riskin aluetta listataan
@@ -178,3 +178,4 @@ if __name__ == "__main__":
             print(f"| {i+1}. | {tulos['Ennustettu Leväriski']} | {tulos['Päivämäärä']} | {tulos['Sijainti']} | **{max_prob*100:.1f}%** |")
             
     print("="*80)
+    return top_risk_list
