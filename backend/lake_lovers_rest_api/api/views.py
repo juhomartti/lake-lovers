@@ -56,7 +56,7 @@ class DataView(APIView):
                 "latitude": i["lat"],
                 "longitude": i["long"]
             },
-            #data.append(data_point[0])
+            data.append(data_point[0])
 
         for i in serializer.data:
             for key, value in PROVINCES.items():
