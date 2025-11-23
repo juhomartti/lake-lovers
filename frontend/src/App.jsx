@@ -1,106 +1,86 @@
 import { useState, useEffect} from 'react'
 import './App.css'
-import Map from './Map.jsx'
-
-import axios from 'axios';
+import './map/MapContainer'
 import provinceIds from './data/province_id.json';
+import MapContainer from './map/MapContainer';
+import { fetchAiSummary, getMarkers } from './ApiService';
+import AISummary from './AiSummary';
 
 function App() {
-
-  // Aseta oletusarvoksi nykyinen päivä (YYYY-MM-DD)
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0]; // Muotoile YYYY-MM-DD
-  });
-
+  const [selectedDate, setSelectedDate] = useState(null)
   const [province, setProvince] = useState(null)
   const [markersData, setMarkersData] = useState(null);
-  const [postData, setPostData] = useState(null);
-  const [data, setData] = useState(null);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+  const [loadingMarkers, setLoadingMarkers] = useState(false);
 
-  // Funktio GET-pyynnön tekemiseen
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`https://esiintymispaikka/rest/api/data?date=${selectedDate}`);
-      setData(response.data);
-    } catch (error) {
-      console.error("Virhe datan hakemisessa:", error);
-    }
-  };
+  const observationDates = [
+      new Date(2025, 10, 10),
+      new Date(2025, 10, 14)
+  ];
 
 
-  const sendData = async () => {
-    try {
-      console.log("Lähetettävä data:", postData);
-
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/province/",
-        postData, // Lähetettävä JSON-data
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log("Vastaus palvelimelta:", response.data);
-      setMarkersData(response.data);
-      // Voit käsitellä vastauksen täällä, esimerkiksi päivittää tilan
-    } catch (error) {
-      console.error("Virhe datan lähettämisessä:", error);
-    }
-  }; 
-
-
-  // Voit kutsua fetchData-funktiota esimerkiksi komponentin mountauksen yhteydessä tai tarvittaessa
+  // setup at the beginning
   useEffect(() => {
-      if (selectedDate && province) {
-/*           setPostData({
+    // select latest observation date based on get request result else
+    const today = new Date();
+    setSelectedDate(today)
+
+
+  }, []);
+
+
+
+
+  // send post request for markers in selected province
+  useEffect(() => {
+    console.log('ARVO PÄIVITETTY:', selectedDate?.toISOString().split("T")[0], province)
+
+    if (selectedDate && province) {
+    /*        setmarkerQuery({
               date: "2025-07-02",
               province: "8" || null,
           }); */
-          setPostData({
-              date: selectedDate,
-              province: provinceIds[province] || null,
-          });
+          const data = {
+            date: selectedDate.toISOString().split("T")[0], // format YYYY-MM-DD,
+            province: provinceIds[province] || null,
+          }
+          getMarkers(setLoadingMarkers, setMarkersData, data)
       }
   }, [selectedDate, province]);
 
-  // Lähetetään postData, kun se on asetettu
-  useEffect(() => {
-      if (postData) {
-          sendData();
-      }
-  }, [postData]);
-
-  useEffect(() => {
-    console.log("Päivitety markersData:", markersData);
-  }, [markersData]);
 
 
   return (
-  <div className="h-screen w-screen flex flex-col bg-emerald-900"> 
-    <div className="w-[95%] max-w-7xl mx-auto flex-1 flex-col mt-5">
-      <div className='bg-red-600 flex rounded-2xl'>
-        otsikko
+      <div className="min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="bg-blue-600 text-white p-4 min-h-20">
+          <div className="container mx-auto">
+          </div>
+        </header>
+
+        {/* Main content container */}
+        <main className="flex-grow container mx-auto p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Map container*/}
+            <div className="flex-3 lg:w-2/1 max-w-[1000px] max-h-[700px] bg-green-100 p-6 rounded-lg aspect-square">
+              <MapContainer markersData={markersData} setProvince={setProvince} province={province} selectedDate={selectedDate} setSelectedDate={setSelectedDate} observationDates={observationDates}/>
+            </div>
+
+            {/* Summary container */}
+            <div className="flex-1 bg-yellow-100 p-6 rounded-lg">
+              <AISummary fetchAiSummary={fetchAiSummary} setAiSummary={setAiSummary} setLoadingAiSummary={setLoadingAiSummary} loadingAiSummary={loadingAiSummary}/>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-gray-800 text-white p-4 mt-auto min-h-20">
+        </footer>
       </div>
-      <div className='flex w-full bg-black flex-1 overflow-y-auto'> 
-        <div className='flex-2 bg-amber-200 rounded-2xl'>
-          <Map selectedDate={selectedDate} 
-          setSelectedDate={setSelectedDate}
-          setProvince={setProvince}
-          markersData={markersData}/>
-        </div>
-        <div className='flex-1 bg-amber-800 rounded-2xl'>
-          ai kooste
-        </div>
-      </div>
-      <footer className='h-[50px] bg-blue-400 shrink-0'>
-        Footer
-      </footer>
-    </div>
-  </div>
-  );
-}
+    );
+  };
 
 
-export default App
+
+export default App;

@@ -1,17 +1,19 @@
-function AISummary({fetchAiSummary, setAiSummary, setLoadingAiSummary, loadingAiSummary, aiSummary}) {
+function AISummary({aiSummary , fetchAiSummary, loadingAiSummary}) {
+
+
 
     return (
         <div className="p-6">
-            <h2 className="text-black text-2xl">AI Summary</h2>
-            {loadingAiSummary || <button onClick={() => fetchAiSummary(setLoadingAiSummary, setAiSummary )} className="bg-green-200 p-1 rounded-md mt-1">Generate AI Summary</button>}
+            <h2 className="text-white text-2xl">AI Summary</h2>
+            {/* <button onClick={fetchAiSummary} className="bg-green-200 p-1 rounded-md mt-1">Generate AI Summary</button> */}
+            {!loadingAiSummary || <button onClick={fetchAiSummary} className="bg-green-200 p-1 rounded-md mt-1">Generate AI Summary</button>}
             {!loadingAiSummary && <LoadingSpinner />}
-             {aiSummary && <p className="text-black">{aiSummary}</p>}
+             {aiSummary && <p className="text-white">{aiSummary}</p>}
         </div>
-    )
+    );
 }
 
 export default AISummary;
-
 
 
 function LoadingSpinner() {
@@ -57,7 +59,7 @@ function LoadingSpinner() {
         `}
       </style>
       <span className="loader"></span>
-      <p className="text-black inline-flex text-center">Loading summary...</p>
+      <p className="text-white inline-flex text-center">Loading summary...</p>
     </>
   );
 }

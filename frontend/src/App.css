@@ -1,2 +1,13 @@
 @import "tailwindcss";
 @import 'leaflet/dist/leaflet.css';
+
+
+.react-datepicker__day--highlighted {
+    background-color: #00b7ff !important;
+    color: white !important;
+}
+
+.react-datepicker__day--selected {
+    background-color: #095829 !important;
+    color: white !important;
+}
