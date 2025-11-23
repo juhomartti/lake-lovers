@@ -1,0 +1,180 @@
+import pandas as pd
+import numpy as np
+import os
+import joblib 
+from xgboost import XGBClassifier
+from typing import Dict, Any, List
+
+# ************************************************
+# ASETUKSET JA VAKIOT
+# ************************************************
+# HUOM! Muokkaa tämä polku vastaamaan omaa koneesi hakemistoa!
+file_path = "C:\\Users\\35845\\Documents\\PYTHON\\Hackhaton\\" 
+INPUT_FILE = os.path.join(file_path, 'rikastettu_sinileva_data.csv') 
+MODEL_FILE = os.path.join(file_path, 'levamalli_xgboost.joblib')
+
+# Piirteiden järjestys (kriittinen ennustuksessa)
+FEATURE_ORDER = [
+    'Latitude_DD', 'Longitude_DD', 
+    'Ilma_Lämpötila_7d_C', 'Sadanta_7d_mm', 'Tuuli_7d_ms', 
+    'DayOfYear_sin', 'DayOfYear_cos', 'Vuosi'
+]
+RISKITASOT = {
+    0: "Ei levää/Hyvä", 
+    1: "Vähäinen levä", 
+    2: "Kohtalainen levä", 
+    3: "Runsasta levää"
+}
+
+# ************************************************
+# 1. ILMASTOMUUTOSSKENAARION DATAN VALMISTELU
+# ************************************************
+
+def luo_ennuste_datakehys_ilmastomuutoksella(df_alkuperäinen: pd.DataFrame, target_year: int) -> pd.DataFrame:
+    """
+    Luo ennustedatakehyksen käyttäen globaaleja kuukausikeskiarvoja, 
+    soveltaen ilmastonmuutoskertoimia.
+    """
+    test_months = [5, 6, 7, 8, 9] # Toukokuu - Syyskuu
+    
+    # 1. Laske tyypilliset sääolosuhteet KUUKAUSITTAIN koko alueella
+    monthly_avg_weather = df_alkuperäinen.groupby(df_alkuperäinen['Päivämäärä'].dt.month)[
+        ['Ilma_Lämpötila_7d_C', 'Sadanta_7d_mm', 'Tuuli_7d_ms']
+    ].mean().reset_index()
+    monthly_avg_weather.rename(columns={'Päivämäärä': 'Kuukausi'}, inplace=True)
+
+    # ILMASTOMUUTOS: KÄYTETÄÄN LISÄTTÄÄN KERTOIME
+    
+    # Simuloitu lämpeneminen: Lämpötila x1.02 (+2%)
+    monthly_avg_weather['Ilma_Lämpötila_7d_C'] *= 1.02 
+    
+    # Simuloitu sadannan kasvu: Sadanta x1.2 (+20%)
+    monthly_avg_weather['Sadanta_7d_mm'] *= 1.2 
+    
+    # 2. Luo Uniikki ruudukko (Lat/Lon)
+    locations_df = df_alkuperäinen[['Latitude_DD', 'Longitude_DD']].drop_duplicates().reset_index(drop=True)
+    
+    # 3. Yhdistä ruudukko ja kuukausi-sää (Cross Join)
+    full_prediction_grid = pd.DataFrame()
+    for month in test_months:
+        locs = locations_df.copy()
+        locs['Kuukausi'] = month
+        full_prediction_grid = pd.concat([full_prediction_grid, locs], ignore_index=True)
+
+    # Liitä kuukausittaiset SÄÄ-ÄÄRIARVOT
+    df_ennuste_valmis = pd.merge(
+        full_prediction_grid,
+        monthly_avg_weather,
+        on='Kuukausi',
+        how='left'
+    )
+
+    # 4. Lisää ajalliset piirteet
+    df_ennuste_valmis['Päivämäärä'] = df_ennuste_valmis['Kuukausi'].apply(
+        lambda m: pd.to_datetime(f'{target_year}-{m}-15')
+    )
+    df_ennuste_valmis['DayOfYear'] = df_ennuste_valmis['Päivämäärä'].dt.dayofyear
+    df_ennuste_valmis['DayOfYear_sin'] = np.sin(2 * np.pi * df_ennuste_valmis['DayOfYear'] / 365)
+    df_ennuste_valmis['DayOfYear_cos'] = np.cos(2 * np.pi * df_ennuste_valmis['DayOfYear'] / 365)
+    df_ennuste_valmis['Vuosi'] = target_year
+    df_ennuste_valmis['Sijainti'] = "Lat: " + df_ennuste_valmis['Latitude_DD'].round(4).astype(str) + ", Lon: " + df_ennuste_valmis['Longitude_DD'].round(4).astype(str)
+    
+    # Valitse vain mallin vaatimat piirteet
+    X_pred = df_ennuste_valmis[FEATURE_ORDER].fillna(0)
+    
+    print(f"Luotu ILMASTOMUUTOS ruudukko, koko: {len(df_ennuste_valmis)} riviä (Sijainti x Kuukausi).")
+    return df_ennuste_valmis, X_pred
+
+# ************************************************
+# 2. AUTOMAATTINEN RISKIN ETSINTÄ (Yhden askeleen ennustus)
+# ************************************************
+
+def etsi_top_n_riskialuetta_optimoidusti(malli: XGBClassifier, df_valmis: pd.DataFrame, X_pred: pd.DataFrame, n: int = 10) -> List[Dict[str, Any]]:
+    """
+    Ennustaa koko datakehykselle kerralla ja palauttaa TOP N korkeimman riskin paikat.
+    """
+    # 1. Ennustus koko datakehykselle
+    predictions_num = malli.predict(X_pred)
+    probabilities = malli.predict_proba(X_pred)
+
+    df_valmis['RiskitasoNum'] = predictions_num
+    
+    # 2. Laske pisteytys: Pisteytys = RiskitasoNum + Todennäköisyys (korkein ennustetulle luokalle)
+    max_probs = np.max(probabilities, axis=1)
+    df_valmis['Todennäköisyys'] = max_probs
+    df_valmis['Pisteytys'] = df_valmis['RiskitasoNum'] + df_valmis['Todennäköisyys']
+    
+    # 3. Lajittelu ja TOP N haku
+    df_results_sorted = df_valmis.sort_values(by=['Pisteytys', 'RiskitasoNum'], ascending=False)
+    
+    # Muokkaa tulostusmuotoa
+    top_results_list = []
+    for index, row in df_results_sorted.head(n).iterrows():
+        # Etsi kaikkien luokkien todennäköisyydet tulostusta varten
+        full_probs = {RISKITASOT[i]: prob for i, prob in enumerate(probabilities[index])}
+        
+        top_results_list.append({
+            "Sijainti": row['Sijainti'],
+            "Päivämäärä": row['Päivämäärä'].strftime('%d.%m.%Y'),
+            "Ennustettu Leväriski": RISKITASOT.get(row['RiskitasoNum']),
+            "Todennäköisyys": row['Todennäköisyys'],
+            "Todennäköisyydet": full_probs
+        })
+        
+    return top_results_list
+
+# ************************************************
+# 3. PÄÄOHJELMA SUORITUS
+# ************************************************
+
+if __name__ == "__main__":
+    
+    print("Ladataan malli ja historiallinen data...")
+    TARGET_YEAR = 2026 # Tuleva vuosi ennustukseen
+    TOP_N = 10 # Kuinka monta korkeimman riskin aluetta listataan
+
+    try:
+        # 1. Ladataan malli ja data
+        malli = joblib.load(MODEL_FILE)
+        df_alkuperäinen = pd.read_csv(INPUT_FILE, sep=';')
+        
+        # 2. Valmistellaan data
+        df_alkuperäinen['Päivämäärä'] = pd.to_datetime(df_alkuperäinen['Päivämäärä'], errors='coerce')
+        df_alkuperäinen['DayOfYear'] = df_alkuperäinen['Päivämäärä'].dt.dayofyear
+        df_alkuperäinen = df_alkuperäinen.dropna(subset=['Ilma_Lämpötila_7d_C', 'Sadanta_7d_mm', 'Tuuli_7d_ms', 'LevätilanneNum']).copy()
+
+    except FileNotFoundError as e:
+        print(f"VIRHE: Vaadittu tiedostoa ei löytynyt: {e}")
+        print("Varmista, että olet ajanut koulutusskriptin ja että tiedostot ovat oikeassa paikassa.")
+        exit()
+
+    # 3. VALMISTELE ENNUSTEDATA ILMASTOMUUTOSSKENAARIOLLA
+    try:
+        # Käytetään ilmastonmuutoskertoimia ennustedatan luomiseen
+        df_valmis, X_pred = luo_ennuste_datakehys_ilmastomuutoksella(df_alkuperäinen, TARGET_YEAR) 
+    except Exception as e:
+        print(f"VIRHE DATAN VALMISTELUSSA: {e}")
+        exit()
+
+    # 4. SUORITETAAN TOP N RISKIALUEEN ETSINTÄ
+    print("Suoritetaan ennustus (batch prediction) ilmastonmuutos-ruudukolle kerralla...")
+    top_risk_list = etsi_top_n_riskialuetta_optimoidusti(malli, df_valmis, X_pred, TOP_N)
+    
+    print("\n" + "="*80)
+    print(f"TOP {TOP_N} ENNUSTETUT KORKEIMMAN LEVÄRISKIN PAIKAT VUONNA {TARGET_YEAR}")
+    print(f"   (Ilmastomuutos-skenaario: Lämpötila x1.02, Sadanta x1.2)")
+    print("="*80)
+
+    if not top_risk_list:
+        print("Hakua ei voitu suorittaa tai ennusteita ei löytynyt.")
+    else:
+        print(f"Korkein ennustettu riskitaso: **{top_risk_list[0]['Ennustettu Leväriski']}**")
+        print("\n| Järjestys | Ennustettu Riski | Päivämäärä | Sijainti (Lat/Lon) | Todennäköisyys (Ennustetulle luokalle) |")
+        print("|:---------:|:------------------:|:----------:|:--------------------:|:---------------------------------------:|")
+        
+        for i, tulos in enumerate(top_risk_list):
+            max_prob = tulos['Todennäköisyys'] 
+            
+            print(f"| {i+1}. | {tulos['Ennustettu Leväriski']} | {tulos['Päivämäärä']} | {tulos['Sijainti']} | **{max_prob*100:.1f}%** |")
+            
+    print("="*80)

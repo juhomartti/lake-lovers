@@ -11,7 +11,7 @@ from typing import Dict, Any
 # ************************************************
 file_path = "C:\\Users\\35845\\Documents\\PYTHON\\Hackhaton\\" 
 INPUT_FILE = os.path.join(file_path, 'rikastettu_sinileva_data.csv') 
-MODEL_FILE = os.path.join(file_path, 'levamalli_xgboost.joblib') # Mallitiedosto
+MODEL_FILE = os.path.join(file_path, 'levamalli_xgboost.joblib')
 FEATURE_ORDER = [
     'Latitude_DD', 'Longitude_DD', 
     'Ilma_Lämpötila_7d_C', 'Sadanta_7d_mm', 'Tuuli_7d_ms', 
